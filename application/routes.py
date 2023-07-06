@@ -17,6 +17,9 @@ def home():
     """
     page = request.args.get('page', 1,type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(per_page=5, page=page)
+    if current_user.is_authenticated:
+        image_file = url_for('static', filename='pics/' + current_user.image_file)
+        return render_template('home.html', posts=posts, image_file=image_file)
     return render_template('home.html', posts=posts)
 
 
@@ -25,6 +28,9 @@ def about():
     """
     Function that routes to/back to About page
     """
+    if current_user.is_authenticated:
+        image_file = url_for('static', filename='pics/' + current_user.image_file)
+        return render_template('about.html', title='About', image_file=image_file)
     return render_template('about.html', title='About')
 
 
