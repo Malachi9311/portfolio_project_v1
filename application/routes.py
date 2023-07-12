@@ -2,11 +2,10 @@ import os
 import secrets
 from PIL import Image
 from application import app, bcrypt, db
-from application.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
-from application.models import User, Post
+from application.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, CommentForm
+from application.models import User, Post, Comments
 from flask import render_template, url_for, flash, redirect, request, abort
 from flask_login import login_user, current_user, logout_user, login_required
-
 
 
 @app.route('/')
@@ -15,7 +14,7 @@ def home():
     """
     Function that routes to/back to Home page
     """
-    page = request.args.get('page', 1,type=int)
+    page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(per_page=5, page=page)
     if current_user.is_authenticated:
         image_file = url_for('static', filename='pics/' + current_user.image_file)
@@ -131,14 +130,26 @@ def new_post():
     image_file = url_for('static', filename='pics/' + current_user.image_file)
     return render_template('create_post.html', title='New Post', form=form, legend='New Post', image_file=image_file)
 
-@app.route('/post/<int:post_id>')
+
+@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 @login_required
 def post(post_id):
     """
-    Function that routes to a page where other users can comment.
+    Function that routes to a page where other users can comment on other users posts.
     """
     post = Post.query.get_or_404(post_id)
-    return render_template('post.html', title=post.title, post=post)
+    post_num = int(post_id)
+    form = CommentForm()
+    # page = request.args.get('page', 1, type=int)
+    comments = Comments.query.filter_by(post_id=post_num).order_by(Comments.date_posted.desc()).all()  # .paginate(per_page=3, page=page)
+    image_file = url_for('static', filename='pics/' + current_user.image_file)
+    if form.validate_on_submit():
+        comment = Comments(content=form.content.data, user_id=current_user.id, post_id=post_num)
+        db.session.add(comment)
+        db.session.commit()
+        flash('Your Comment has been added', 'success')
+        return redirect(url_for('home'))
+    return render_template('post.html', title=post.title, post=post, image_file=image_file, form=form, comments=comments)
 
 
 @app.route('/post/<int:post_id>/update', methods=['GET', 'POST'])
@@ -171,6 +182,13 @@ def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
+
+    post_num = int(post_id)
+    comments = Comments.query.filter_by(post_id=post_num).all()
+    for comment in comments:
+        comment = Comments.query.filter_by(post_id=post_num).first()
+        db.session.delete(comment)
+        db.session.commit()
     db.session.delete(post)
     db.session.commit()
     flash('You\'re Post has been deleted', 'success')
@@ -185,4 +203,5 @@ def user_posts(username):
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
     posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).paginate(per_page=5, page=page)
-    return render_template('user_posts.html', posts=posts, user=user)
+    image_file = url_for('static', filename='pics/' + current_user.image_file)
+    return render_template('user_posts.html', posts=posts, user=user, image_file=image_file)

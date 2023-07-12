@@ -1,4 +1,5 @@
-<div>
+
+    <div>
         <h1>Community Unit</h1>
         <h3>Always near you, Together</h3>
         <p>A social platform for you immediate surroundings</p>
