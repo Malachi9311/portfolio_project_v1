@@ -16,8 +16,7 @@
       <h2 class="article-title">{{ post.title }}</h2>
       <p class="article-content">{{ post.content }}</p>
     </div>
-  
-  <!-- Modal -->
+  <!-- Post Modal -->
   <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -64,17 +63,40 @@
 <div>
   {% for comment in comments %}
    <article class="media content-section">
-          <img class="rounded-circle article-img" src="{{ url_for('static', filename='pics/' + comment.commentator.image_file) }}">
+          <img class="rounded-circle article-img" src="{{ url_for('static', filename='pics/' + comment.commentator.image_file) }}"> 
           <div class="media-body">
             <div class="article-metadata">
-              <a class="mr-2" href="{{ url_for('user_posts', username=post.author.username) }}">{{ comment.commentator.username }}</a>
+              <a class="mr-2" href="{{ url_for('user_posts', username=comment.commentator.username) }}">{{ comment.commentator.username }}</a>
               <small class="text-muted">{{ comment.date_posted.strftime('%Y-%m-%d') }}</small>
             </div>
             <p class="article-content">{{ comment.content }}</p>
           </div>
+          {% if comment.commentator == current_user or comment.post_id == comment.for_post.id and current_user.id == comment.for_post.user_id %}
+          <div>
+            <button type="button" class="btn btn-danger btn-sm m-1" data-toggle="modal" data-target="#commentModal">Delete</button>
+          </div>
+          {% endif %}
         </article>
   {% endfor %}
 </div>
-<!-- Pagination below -->
+<!-- Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete Comment?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
+            <input class="btn btn-danger" type="submit" value="Delete">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
 {% endblock content %}
