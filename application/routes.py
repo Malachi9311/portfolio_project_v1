@@ -140,8 +140,7 @@ def post(post_id):
     post = Post.query.get_or_404(post_id)
     post_num = int(post_id)
     form = CommentForm()
-    # page = request.args.get('page', 1, type=int)
-    comments = Comments.query.filter_by(post_id=post_num).order_by(Comments.date_posted.desc()).all()  # .paginate(per_page=3, page=page)
+    comments = Comments.query.filter_by(post_id=post_num).order_by(Comments.date_posted.desc()).all() 
     image_file = url_for('static', filename='pics/' + current_user.image_file)
     if form.validate_on_submit():
         comment = Comments(content=form.content.data, user_id=current_user.id, post_id=post_num)
@@ -162,6 +161,7 @@ def update_post(post_id):
     if post.author != current_user:
         abort(403)
     form = PostForm()
+    image_file = url_for('static', filename='pics/' + current_user.image_file)
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
@@ -171,7 +171,7 @@ def update_post(post_id):
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
-    return render_template('create_post.html', title='Update Post', form=form, post=post, legend='Update Post')
+    return render_template('create_post.html', title='Update Post', form=form, post=post, legend='Update Post', image_file=image_file)
 
 @app.route('/post/<int:post_id>/delete', methods=['POST'])
 @login_required
@@ -205,3 +205,17 @@ def user_posts(username):
     posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).paginate(per_page=5, page=page)
     image_file = url_for('static', filename='pics/' + current_user.image_file)
     return render_template('user_posts.html', posts=posts, user=user, image_file=image_file)
+
+
+@app.route('/post/<int:post_id>/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(post_id, comment_id):
+    post_num = int(post_id)
+    comments = Comments.query.filter_by(post_id=post_num).all()
+    for comment in comments:
+        comment = Comments.query.filter_by(id=comment_id).first()
+        db.session.delete(comment)
+        db.session.commit()
+        flash('That Comment has been deleted', 'success')
+        return redirect(url_for('home'))
+
