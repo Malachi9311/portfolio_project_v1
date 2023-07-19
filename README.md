@@ -1,9 +1,9 @@
 
-    <div>
-        <h1>Community Unit</h1>
+   
+        # Community Unit
         <h3>Always near you, Together</h3>
         <p>A social platform for you immediate surroundings</p>
-    </div>
+   
     <div>
         <a href="https://github.com/Malachi9311/portfolio_project_v1">Link to project</a>
     </div>
